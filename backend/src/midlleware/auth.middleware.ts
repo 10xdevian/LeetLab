@@ -7,7 +7,7 @@ export const authMiddleware = (
   next: NextFunction
 ) => {
   try {
-    const header = req.headers["authorization"];
+    const header = req.cookies.jwt;
 
     if (!header) {
       res.status(400).json({

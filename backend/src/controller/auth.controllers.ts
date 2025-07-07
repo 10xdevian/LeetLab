@@ -34,7 +34,7 @@ export const signup = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(200).json({
+    res.status(201).json({
       msg: "User created",
       newUser,
     });
@@ -78,17 +78,43 @@ export const signin = async (req: Request, res: Response) => {
 
     const token = jwt.sign(
       { id: existingUser.id },
-      process.env.JWT_SECRET as string
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: "7d",
+      }
     );
+
+    //  this is how we store cookies
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV !== "development",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
     res.status(200).json({
-      token: token,
+      success: true,
+      msg: "User login Successfully",
     });
   } catch (error) {
     console.log(error);
   }
 };
 
-export const logout = async (req: Request, res: Response) => {};
+export const logout = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("jwt", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV !== "development",
+    });
+    res.status(200).json({
+      success: true,
+      msg: "User logout successfully",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 export const me = async (req: Request, res: Response) => {
   try {
