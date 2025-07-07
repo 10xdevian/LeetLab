@@ -1,4 +1,4 @@
-import { PrismaClient } from "./generated/prisma/index";
+import { PrismaClient } from "../generated/prisma/index";
 
 // extend the global this type
 declare global {

@@ -17,6 +17,7 @@ enum UserRole {
 model User {
   id String @default(uuid())
   name String?
+  username String @unique
   email String @unique
   image String?
   role UserRole @default(USER)
