@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { db } from "../lib/db";
 import bcrypt from "bcryptjs";
 import { UserRole } from "../generated/prisma";
+import jwt from "jsonwebtoken";
 
 export const signup = async (req: Request, res: Response) => {
   const { name, username, email, password } = req.body;
@@ -43,11 +44,81 @@ export const signup = async (req: Request, res: Response) => {
 };
 
 export const signin = async (req: Request, res: Response) => {
-    const {username , email , password} = req.body;
+  const { username, email, password } = req.body;
 
-    
+  try {
+    //  user exists or not
+    const existingUser = await db.user.findUnique({
+      where: {
+        username,
+        email,
+      },
+    });
+
+    if (!existingUser) {
+      res.status(400).json({
+        error: "username and password is incorrect",
+      });
+      return;
+    }
+
+    //  compare the password is correct or not
+
+    const correctPassword = await bcrypt.compare(
+      password,
+      existingUser?.password as string
+    );
+
+    if (!correctPassword) {
+      res.status(400).json({
+        error: "Password is incorrect",
+      });
+      return;
+    }
+
+    const token = jwt.sign(
+      { id: existingUser.id },
+      process.env.JWT_SECRET as string
+    );
+    res.status(200).json({
+      token: token,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 export const logout = async (req: Request, res: Response) => {};
 
-export const me = async (req: Request, res: Response) => {};
+export const me = async (req: Request, res: Response) => {
+  try {
+    // @ts-ignore
+    const userId = req.user?.id;
+
+    if (!userId || typeof userId !== "string") {
+      res.status(401).json({ error: "Unauthorized - Invalid user ID" });
+      return;
+    }
+    const user = await db.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        name: true,
+        username: true,
+        email: true,
+        image: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    // Return user data
+    res.status(200).json(user);
+  } catch (error) {
+    console.log(error);
+  }
+};
