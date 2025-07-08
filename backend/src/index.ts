@@ -13,7 +13,7 @@ app.use(cors());
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
-  res.send("Go to the gym");
+  res.send("Go to the gym and tell to your brother that you are going gym ");
   
 });
 
